@@ -24,6 +24,18 @@ describe("QuackList", () => {
     expect(screen.getByText("@CaffeinatedDuck")).toBeInTheDocument()
   })
 
+  it("renders quack with mood when provided", () => {
+    render(<QuackList quacks={[quack({ mood: "happy" })]} />)
+
+    expect(screen.getByText("😊 happy")).toBeInTheDocument()
+  })
+
+  it("renders quack without mood when mood is not set", () => {
+    render(<QuackList quacks={[quack({ mood: null })]} />)
+
+    expect(screen.queryByText(/😊|😢|😡|🤪/)).not.toBeInTheDocument()
+  })
+
   it("shows an error with a working reload button", async () => {
     const onReload = vi.fn()
     render(

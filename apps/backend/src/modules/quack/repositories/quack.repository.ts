@@ -11,6 +11,7 @@ const mapPrismaQuackToDomain = (
 ): Quack => ({
   id: quack.id,
   text: quack.text,
+  mood: quack.mood ?? null,
   userId: quack.userId,
   createdAt: quack.createdAt,
   updatedAt: quack.updatedAt,
@@ -41,11 +42,13 @@ export class QuackRepository {
 
   async createQuack(createQuackData: {
     text: string;
+    mood?: string | null;
     userId: string;
   }): Promise<Quack> {
     const quack = await this.prisma.quack.create({
       data: {
         text: createQuackData.text,
+        mood: createQuackData.mood ?? null,
         user: { connect: { id: createQuackData.userId } },
       },
       include: { user: true },

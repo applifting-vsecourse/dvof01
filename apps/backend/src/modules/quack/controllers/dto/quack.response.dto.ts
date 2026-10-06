@@ -19,6 +19,9 @@ export class QuackResponseDto {
   @ApiProperty()
   text!: string;
 
+  @ApiProperty({ required: false, nullable: true })
+  mood?: string | null;
+
   @ApiProperty()
   userId!: string;
 
@@ -37,6 +40,7 @@ export class QuackResponseDto {
     return {
       id: quack.id,
       text: quack.text,
+      mood: quack.mood ?? null,
       userId: quack.userId,
       createdAt: quack.createdAt,
       user: {

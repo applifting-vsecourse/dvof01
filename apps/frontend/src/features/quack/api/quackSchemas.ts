@@ -11,6 +11,7 @@ export const quackUserSchema = z.object({
 export const quackSchema = z.object({
   id: z.string(),
   text: z.string(),
+  mood: z.string().nullable().optional(),
   userId: z.string(),
   createdAt: z.coerce.date(),
   user: quackUserSchema,

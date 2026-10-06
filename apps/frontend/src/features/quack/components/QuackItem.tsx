@@ -7,6 +7,13 @@ import { UsersUserName } from "@/features/quack/components/UsersUserName"
 
 type QuackItemProps = { quack: Quack }
 
+const MOOD_MAP: Record<string, { emoji: string; label: string }> = {
+  happy: { emoji: "😊", label: "happy" },
+  sad: { emoji: "😢", label: "sad" },
+  angry: { emoji: "😡", label: "angry" },
+  silly: { emoji: "🤪", label: "silly" },
+}
+
 export function QuackItem({ quack }: QuackItemProps) {
   const { name, username } = quack.user
 
@@ -16,6 +23,8 @@ export function QuackItem({ quack }: QuackItemProps) {
     .join("")
     .slice(0, 2)
     .toUpperCase()
+
+  const moodInfo = quack.mood ? MOOD_MAP[quack.mood] : undefined
 
   return (
     <article className="flex w-full gap-4 border-b border-border pt-2 pb-4 last:border-b-0">
@@ -30,6 +39,14 @@ export function QuackItem({ quack }: QuackItemProps) {
           </span>
           <span className="text-xs text-muted-foreground">·</span>
           <time className="text-xs text-muted-foreground">{formatDate(quack.createdAt)}</time>
+          {moodInfo ? (
+            <>
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-xs text-muted-foreground">
+                {moodInfo.emoji} {moodInfo.label}
+              </span>
+            </>
+          ) : null}
         </div>
         <p className="text-sm break-words whitespace-pre-line">{quack.text}</p>
       </div>
