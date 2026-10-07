@@ -14,13 +14,7 @@ type QuackListProps = {
   emptyMessage?: string
 }
 
-export function QuackList({
-  quacks,
-  isLoading,
-  error,
-  onReload,
-  emptyMessage,
-}: QuackListProps) {
+export function QuackList({ quacks, isLoading, error, onReload, emptyMessage }: QuackListProps) {
   return (
     <div className="flex flex-col">
       {isLoading && quacks.length === 0 ? (

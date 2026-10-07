@@ -35,11 +35,7 @@ function QuacksPage() {
           quacks={quacksQuery.data ?? []}
           isLoading={quacksQuery.isLoading}
           error={quacksQuery.error ?? undefined}
-          emptyMessage={
-            searchQuery.trim()
-              ? "No quacks found matching your search."
-              : undefined
-          }
+          emptyMessage={searchQuery.trim() ? "No quacks found matching your search." : undefined}
           // Only the error state offers a retry — posting invalidates the list,
           // and refocusing the tab refetches it.
           onReload={() => void quacksQuery.refetch()}

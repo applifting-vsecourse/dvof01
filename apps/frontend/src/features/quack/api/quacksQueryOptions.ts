@@ -15,7 +15,7 @@ export const quacksQueryOptions = (q?: string) =>
           .get("quacks", {
             searchParams: q?.trim() ? { q: q.trim() } : undefined,
           })
-          .json()
+          .json(),
       ),
     // Search results should always come from the backend, never from cache.
     staleTime: 0,

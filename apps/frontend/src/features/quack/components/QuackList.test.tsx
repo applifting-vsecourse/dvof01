@@ -61,8 +61,6 @@ describe("QuackList", () => {
       />,
     )
 
-    expect(
-      screen.getByText("No quacks found matching your search."),
-    ).toBeInTheDocument()
+    expect(screen.getByText("No quacks found matching your search.")).toBeInTheDocument()
   })
 })

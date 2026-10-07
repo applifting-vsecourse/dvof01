@@ -19,14 +19,14 @@ export function QuackSearch({ value, onChange, className }: QuackSearchProps) {
         Search quacks
       </label>
       <div className="relative flex items-center">
-        <Search className="absolute left-3 size-4 text-muted-foreground pointer-events-none" />
+        <Search className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
         <Input
           id="quack-search"
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search quacks..."
-          className="pl-9 pr-9"
+          className="pr-9 pl-9"
         />
         {value ? (
           <Button

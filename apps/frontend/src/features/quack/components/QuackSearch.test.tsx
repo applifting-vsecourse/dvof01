@@ -14,9 +14,7 @@ describe("QuackSearch", () => {
     )
 
     expect(screen.getByLabelText("Search quacks")).toBeInTheDocument()
-    expect(
-      screen.getByPlaceholderText("Search quacks..."),
-    ).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("Search quacks...")).toBeInTheDocument()
   })
 
   it("calls onChange when typing", async () => {
