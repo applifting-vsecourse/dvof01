@@ -13,6 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
@@ -21,6 +28,7 @@ import { useAddQuack } from "@/features/quack/hooks/useAddQuack"
 // Mirrors the server-side DTO (MaxLength(280)) so the user is told before
 // the request is made — the server still validates independently.
 const MAX_LENGTH = 280
+const MOODS = ["happy", "sad", "angry", "silly"] as const
 
 const schema = z.object({
   text: z
@@ -28,6 +36,7 @@ const schema = z.object({
     .trim()
     .min(1, "Write something first")
     .max(MAX_LENGTH, `Keep it under ${MAX_LENGTH} characters`),
+  mood: z.enum(MOODS).nullable().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -38,14 +47,17 @@ export function QuackForm({ className }: QuackFormProps) {
   const addQuack = useAddQuack()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { text: "" },
+    defaultValues: { text: "", mood: null },
   })
 
   const text = useWatch({ control: form.control, name: "text" })
   const length = text?.length ?? 0
 
   const handleSubmit = (values: FormValues) => {
-    addQuack.mutate({ text: values.text }, { onSuccess: () => form.reset() })
+    addQuack.mutate(
+      { text: values.text, mood: values.mood ?? null },
+      { onSuccess: () => form.reset() },
+    )
   }
 
   return (
@@ -61,24 +73,58 @@ export function QuackForm({ className }: QuackFormProps) {
           </Alert>
         ) : null}
 
-        <FormField
-          control={form.control}
-          name="text"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New quack</FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder="Quack something..."
+        <div className="flex flex-col items-start gap-3 sm:flex-row">
+          <FormField
+            control={form.control}
+            name="text"
+            render={({ field }) => (
+              <FormItem className="w-full flex-1">
+                <FormLabel>New quack</FormLabel>
+                <FormControl>
+                  <Textarea
+                    rows={3}
+                    placeholder="Quack something..."
+                    disabled={addQuack.isPending}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="mood"
+            render={({ field }) => (
+              <FormItem className="w-full sm:w-auto">
+                <FormLabel>Mood</FormLabel>
+                <Select
+                  onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                  value={field.value ?? "none"}
                   disabled={addQuack.isPending}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                >
+                  <FormControl>
+                    <SelectTrigger
+                      aria-label="Mood"
+                      className="w-full sm:w-[130px]"
+                    >
+                      <SelectValue placeholder="No mood" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">No mood</SelectItem>
+                    <SelectItem value="happy">😊 Happy</SelectItem>
+                    <SelectItem value="sad">😢 Sad</SelectItem>
+                    <SelectItem value="angry">😡 Angry</SelectItem>
+                    <SelectItem value="silly">🤪 Silly</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="flex items-center justify-end gap-3">
           <span

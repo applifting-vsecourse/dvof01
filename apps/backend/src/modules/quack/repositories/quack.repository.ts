@@ -11,6 +11,7 @@ const mapPrismaQuackToDomain = (
 ): Quack => ({
   id: quack.id,
   text: quack.text,
+  mood: quack.mood ?? null,
   userId: quack.userId,
   createdAt: quack.createdAt,
   updatedAt: quack.updatedAt,
@@ -31,8 +32,31 @@ const mapPrismaQuackToDomain = (
 export class QuackRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getQuacks(): Promise<Quack[]> {
+  async getQuacks(q?: string): Promise<Quack[]> {
+    const trimmedQuery = q?.trim();
+    const where = trimmedQuery
+      ? {
+          OR: [
+            { text: { contains: trimmedQuery, mode: 'insensitive' as const } },
+            {
+              user: {
+                name: { contains: trimmedQuery, mode: 'insensitive' as const },
+              },
+            },
+            {
+              user: {
+                username: {
+                  contains: trimmedQuery,
+                  mode: 'insensitive' as const,
+                },
+              },
+            },
+          ],
+        }
+      : undefined;
+
     const quacks = await this.prisma.quack.findMany({
+      where,
       include: { user: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -41,11 +65,13 @@ export class QuackRepository {
 
   async createQuack(createQuackData: {
     text: string;
+    mood?: string | null;
     userId: string;
   }): Promise<Quack> {
     const quack = await this.prisma.quack.create({
       data: {
         text: createQuackData.text,
+        mood: createQuackData.mood ?? null,
         user: { connect: { id: createQuackData.userId } },
       },
       include: { user: true },

@@ -25,23 +25,35 @@ describe('QuacksService', () => {
     const service = new QuacksService(repository);
 
     await expect(service.getQuacks()).resolves.toEqual(quacks);
-    expect(repository.getQuacks).toHaveBeenCalledTimes(1);
+    expect(repository.getQuacks).toHaveBeenCalledWith(undefined);
+  });
+
+  it('passes search query q to repository', async () => {
+    const quacks = [aQuack()];
+    const repository = mock<QuackRepository>();
+    repository.getQuacks.mockResolvedValue(quacks);
+
+    const service = new QuacksService(repository);
+
+    await expect(service.getQuacks('crumb')).resolves.toEqual(quacks);
+    expect(repository.getQuacks).toHaveBeenCalledWith('crumb');
   });
 
   it('creates a quack owned by the signed-in user', async () => {
-    const created = aQuack({ id: 'q2', text: 'hello' });
+    const created = aQuack({ id: 'q2', text: 'hello', mood: 'happy' });
     const repository = mock<QuackRepository>();
     repository.createQuack.mockResolvedValue(created);
 
     const service = new QuacksService(repository);
     const user = { id: 'u1' } as Identity;
 
-    await expect(service.createQuack(user, { text: 'hello' })).resolves.toEqual(
-      created,
-    );
+    await expect(
+      service.createQuack(user, { text: 'hello', mood: 'happy' }),
+    ).resolves.toEqual(created);
     // the author comes from the session, not from the caller's payload
     expect(repository.createQuack).toHaveBeenCalledWith({
       text: 'hello',
+      mood: 'happy',
       userId: 'u1',
     });
   });

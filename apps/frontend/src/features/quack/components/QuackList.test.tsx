@@ -24,6 +24,18 @@ describe("QuackList", () => {
     expect(screen.getByText("@CaffeinatedDuck")).toBeInTheDocument()
   })
 
+  it("renders quack with mood when provided", () => {
+    render(<QuackList quacks={[quack({ mood: "happy" })]} />)
+
+    expect(screen.getByText("😊 happy")).toBeInTheDocument()
+  })
+
+  it("renders quack without mood when mood is not set", () => {
+    render(<QuackList quacks={[quack({ mood: null })]} />)
+
+    expect(screen.queryByText(/😊|😢|😡|🤪/)).not.toBeInTheDocument()
+  })
+
   it("shows an error with a working reload button", async () => {
     const onReload = vi.fn()
     render(
@@ -39,5 +51,16 @@ describe("QuackList", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /reload/i }))
     expect(onReload).toHaveBeenCalledOnce()
+  })
+
+  it("renders custom emptyMessage when provided and quacks list is empty", () => {
+    render(
+      <QuackList
+        quacks={[]}
+        emptyMessage="No quacks found matching your search."
+      />,
+    )
+
+    expect(screen.getByText("No quacks found matching your search.")).toBeInTheDocument()
   })
 })
