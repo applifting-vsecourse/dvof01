@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
+import { useEffect } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
@@ -41,14 +42,32 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-type QuackFormProps = { className?: string }
+type QuackFormProps = {
+  className?: string
+  /** Pre-selected mood from the user's profile default. Passed in by the page. */
+  defaultMood?: string | null
+}
 
-export function QuackForm({ className }: QuackFormProps) {
+export function QuackForm({ className, defaultMood }: QuackFormProps) {
   const addQuack = useAddQuack()
+
+  // Validate that the passed-in defaultMood is one of the allowed values.
+  const initialMood = MOODS.includes(defaultMood as (typeof MOODS)[number])
+    ? (defaultMood as (typeof MOODS)[number])
+    : null
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { text: "", mood: null },
+    defaultValues: { text: "", mood: initialMood },
   })
+
+  // Synchronize mood with initialMood when session arrives or updates,
+  // unless the user has manually changed the mood field.
+  useEffect(() => {
+    if (!form.formState.dirtyFields.mood) {
+      form.setValue("mood", initialMood)
+    }
+  }, [initialMood, form])
 
   const text = useWatch({ control: form.control, name: "text" })
   const length = text?.length ?? 0
@@ -56,7 +75,11 @@ export function QuackForm({ className }: QuackFormProps) {
   const handleSubmit = (values: FormValues) => {
     addQuack.mutate(
       { text: values.text, mood: values.mood ?? null },
-      { onSuccess: () => form.reset() },
+      {
+        onSuccess: () => {
+          form.reset({ text: "", mood: initialMood })
+        },
+      },
     )
   }
 
@@ -106,6 +129,7 @@ export function QuackForm({ className }: QuackFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger
+                      tabIndex={0}
                       aria-label="Mood"
                       className="w-full sm:w-[130px]"
                     >
@@ -138,6 +162,7 @@ export function QuackForm({ className }: QuackFormProps) {
           <Button
             type="submit"
             size="sm"
+            tabIndex={0}
             disabled={addQuack.isPending}
           >
             {addQuack.isPending ? <Loader2 className="size-4 animate-spin" /> : null}

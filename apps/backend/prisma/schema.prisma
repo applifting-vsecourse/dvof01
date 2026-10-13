@@ -98,6 +98,8 @@ model User {
 
   username        String? @db.VarChar(50)
   displayUsername String? @db.VarChar(50)
+  bio             String? @db.VarChar(160)
+  defaultMood     String? @db.VarChar(20)
 
   @@unique([email])
   @@unique([username])

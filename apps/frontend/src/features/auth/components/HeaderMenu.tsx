@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { LogOut } from "lucide-react"
+import { LogOut, Settings } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { ROUTES } from "@/app/routes"
 import { useSession } from "@/features/auth/hooks/useSession"
 import { useSignOut } from "@/features/auth/hooks/useSignOut"
 
@@ -62,6 +63,12 @@ export function HeaderMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to={ROUTES.settings}>
+            <Settings className="size-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => signOut.mutate()}
           disabled={signOut.isPending}
