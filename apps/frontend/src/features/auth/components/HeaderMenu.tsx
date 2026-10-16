@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { LogOut, Settings } from "lucide-react"
 
+import { ROUTES } from "@/app/routes"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { ROUTES } from "@/app/routes"
 import { useSession } from "@/features/auth/hooks/useSession"
 import { useSignOut } from "@/features/auth/hooks/useSignOut"
 

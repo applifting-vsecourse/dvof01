@@ -20,7 +20,10 @@ export class UserService {
       defaultMood?: string | null;
     },
   ): Promise<UserProfile> {
-    const taken = await this.userRepository.isUsernameTaken(data.username, user.id);
+    const taken = await this.userRepository.isUsernameTaken(
+      data.username,
+      user.id,
+    );
     if (taken) {
       throw new ConflictException('Username is already taken');
     }

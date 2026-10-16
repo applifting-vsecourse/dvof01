@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsIn,
   IsNotEmpty,
@@ -7,13 +8,13 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 
 const MOODS = ['happy', 'sad', 'angry', 'silly'] as const;
 
 export class UpdateProfileDto {
   @ApiProperty({
-    description: 'New username (3–30 chars: letters, numbers, dots, underscores)',
+    description:
+      'New username (3–30 chars: letters, numbers, dots, underscores)',
     example: 'john_doe',
     minLength: 3,
     maxLength: 30,

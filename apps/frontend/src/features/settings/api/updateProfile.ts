@@ -1,6 +1,11 @@
 import { api } from "@/lib/api-client"
 
-import { userProfileSchema, updateProfileSchema, type UpdateProfileInput, type UserProfile } from "./profileSchemas"
+import {
+  updateProfileSchema,
+  userProfileSchema,
+  type UpdateProfileInput,
+  type UserProfile,
+} from "./profileSchemas"
 
 export async function getProfile(): Promise<UserProfile> {
   const raw = await api.get("users/me").json()

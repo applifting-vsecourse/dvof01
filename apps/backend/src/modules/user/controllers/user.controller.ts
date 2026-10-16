@@ -1,3 +1,4 @@
+import { UserService } from '@/modules/user/services/user.service';
 import { User } from '@/shared/auth/decorators/user.decorator';
 import { Identity } from '@/shared/auth/domain/identity';
 import { AuthenticatedUserGuard } from '@/shared/auth/guards/authenticated-user.guard';
@@ -20,7 +21,6 @@ import {
 } from '@nestjs/swagger';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserProfileResponseDto } from './dto/user-profile.response.dto';
-import { UserService } from '@/modules/user/services/user.service';
 
 @ApiTags('users')
 @Controller('users')

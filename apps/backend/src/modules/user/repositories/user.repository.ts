@@ -18,7 +18,10 @@ export class UserRepository {
     };
   }
 
-  async isUsernameTaken(username: string, excludeUserId: string): Promise<boolean> {
+  async isUsernameTaken(
+    username: string,
+    excludeUserId: string,
+  ): Promise<boolean> {
     const existing = await this.prisma.user.findFirst({
       where: {
         username: { equals: username, mode: 'insensitive' },
@@ -46,7 +49,9 @@ export class UserRepository {
         username: data.username.toLowerCase(),
         displayUsername: data.username,
         ...(data.bio !== undefined ? { bio: data.bio ?? null } : {}),
-        ...(data.defaultMood !== undefined ? { defaultMood: data.defaultMood ?? null } : {}),
+        ...(data.defaultMood !== undefined
+          ? { defaultMood: data.defaultMood ?? null }
+          : {}),
       },
     });
     return {

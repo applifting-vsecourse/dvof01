@@ -24,7 +24,10 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { updateProfileSchema, type UpdateProfileInput } from "@/features/settings/api/profileSchemas"
+import {
+  updateProfileSchema,
+  type UpdateProfileInput,
+} from "@/features/settings/api/profileSchemas"
 import { useUpdateProfile } from "@/features/settings/hooks/useUpdateProfile"
 
 type ProfileSettingsFormProps = {
@@ -46,7 +49,12 @@ export function ProfileSettingsForm({ initialValues }: ProfileSettingsFormProps)
   useEffect(() => {
     form.reset(initialValues)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues.username, initialValues.displayName, initialValues.bio, initialValues.defaultMood])
+  }, [
+    initialValues.username,
+    initialValues.displayName,
+    initialValues.bio,
+    initialValues.defaultMood,
+  ])
 
   const handleSubmit = (values: UpdateProfileInput) => {
     updateProfile.mutate(values)
@@ -55,9 +63,9 @@ export function ProfileSettingsForm({ initialValues }: ProfileSettingsFormProps)
   // Surface conflict (409) as a field-level error so the typed value stays
   const isConflict = Boolean(
     updateProfile.error instanceof HTTPError &&
-      updateProfile.error.response.status === 409 &&
-      updateProfile.variables?.username &&
-      currentUsername === updateProfile.variables.username,
+    updateProfile.error.response.status === 409 &&
+    updateProfile.variables?.username &&
+    currentUsername === updateProfile.variables.username,
   )
 
   const serverError =
@@ -137,8 +145,7 @@ export function ProfileSettingsForm({ initialValues }: ProfileSettingsFormProps)
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Bio{" "}
-                <span className="text-muted-foreground font-normal">(optional)</span>
+                Bio <span className="font-normal text-muted-foreground">(optional)</span>
               </FormLabel>
               <FormControl>
                 <Textarea
@@ -152,7 +159,7 @@ export function ProfileSettingsForm({ initialValues }: ProfileSettingsFormProps)
                 />
               </FormControl>
               <FormMessage />
-              <p className="text-xs text-muted-foreground text-right">
+              <p className="text-right text-xs text-muted-foreground">
                 {(field.value ?? "").length}/160
               </p>
             </FormItem>

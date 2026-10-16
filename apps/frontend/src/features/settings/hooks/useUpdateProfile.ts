@@ -3,8 +3,8 @@ import { toast } from "sonner"
 
 import { authKeys } from "@/lib/auth-keys"
 
-import { updateProfile } from "@/features/settings/api/updateProfile"
 import type { UpdateProfileInput } from "@/features/settings/api/profileSchemas"
+import { updateProfile } from "@/features/settings/api/updateProfile"
 
 // After a successful save the auth session is stale (name / username may have
 // changed), so we invalidate it so every component reading useSession() picks
