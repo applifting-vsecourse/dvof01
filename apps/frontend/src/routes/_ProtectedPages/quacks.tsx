@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { Seo } from "@/components/Seo"
 
+import { authSessionQueryOptions } from "@/features/auth/api/authSessionQueryOptions"
 import { quacksQueryOptions } from "@/features/quack/api/quacksQueryOptions"
 import { QuackForm } from "@/features/quack/components/QuackForm"
 import { QuackList } from "@/features/quack/components/QuackList"
@@ -16,6 +17,10 @@ export const Route = createFileRoute("/_ProtectedPages/quacks")({
 function QuacksPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const quacksQuery = useQuery(quacksQueryOptions(searchQuery))
+  // Routes are allowed to import from features/ — read the session here and
+  // pass the default mood down as a plain prop so QuackForm stays auth-agnostic.
+  const sessionQuery = useQuery(authSessionQueryOptions())
+  const defaultMood = sessionQuery.data?.user.defaultMood ?? null
 
   return (
     <>
@@ -23,7 +28,10 @@ function QuacksPage() {
       <section className="mx-auto w-full max-w-2xl px-4 py-8">
         <h1 className="mb-4 text-2xl font-semibold tracking-tight">Quacks</h1>
 
-        <QuackForm className="mb-4" />
+        <QuackForm
+          className="mb-4"
+          defaultMood={defaultMood}
+        />
 
         <QuackSearch
           value={searchQuery}
