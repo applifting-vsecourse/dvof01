@@ -25,22 +25,38 @@ describe('QuacksService', () => {
     const service = new QuacksService(repository);
 
     await expect(service.getQuacks()).resolves.toEqual(quacks);
-    expect(repository.getQuacks).toHaveBeenCalledWith(undefined);
+    expect(repository.getQuacks).toHaveBeenCalledWith(undefined, undefined);
   });
 
-  it('passes search query q to repository', async () => {
+  it('passes search query q and currentUserId to repository', async () => {
     const quacks = [aQuack()];
     const repository = mock<QuackRepository>();
     repository.getQuacks.mockResolvedValue(quacks);
 
     const service = new QuacksService(repository);
 
-    await expect(service.getQuacks('crumb')).resolves.toEqual(quacks);
-    expect(repository.getQuacks).toHaveBeenCalledWith('crumb');
+    await expect(service.getQuacks('crumb', 'u1')).resolves.toEqual(quacks);
+    expect(repository.getQuacks).toHaveBeenCalledWith('crumb', 'u1');
   });
 
-  it('creates a quack owned by the signed-in user', async () => {
-    const created = aQuack({ id: 'q2', text: 'hello', mood: 'happy' });
+  it('creates a quack owned by the signed-in user with an optional poll', async () => {
+    const created = aQuack({
+      id: 'q2',
+      text: 'hello',
+      mood: 'happy',
+      poll: {
+        id: 'p1',
+        quackId: 'q2',
+        options: [
+          { id: 'opt1', text: 'Yes', order: 0, voteCount: 0 },
+          { id: 'opt2', text: 'No', order: 1, voteCount: 0 },
+        ],
+        totalVotes: 0,
+        userVotedOptionId: null,
+        createdAt: new Date('2026-01-01T12:00:00Z'),
+        updatedAt: new Date('2026-01-01T12:00:00Z'),
+      },
+    });
     const repository = mock<QuackRepository>();
     repository.createQuack.mockResolvedValue(created);
 
@@ -48,13 +64,18 @@ describe('QuacksService', () => {
     const user = { id: 'u1' } as Identity;
 
     await expect(
-      service.createQuack(user, { text: 'hello', mood: 'happy' }),
+      service.createQuack(user, {
+        text: 'hello',
+        mood: 'happy',
+        poll: { options: ['Yes', 'No'] },
+      }),
     ).resolves.toEqual(created);
     // the author comes from the session, not from the caller's payload
     expect(repository.createQuack).toHaveBeenCalledWith({
       text: 'hello',
       mood: 'happy',
       userId: 'u1',
+      poll: { options: ['Yes', 'No'] },
     });
   });
 });
