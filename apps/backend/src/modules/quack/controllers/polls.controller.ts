@@ -1,5 +1,5 @@
-import { VoteDto } from '@/modules/quack/controllers/dto/vote.dto';
 import { PollResponseDto } from '@/modules/quack/controllers/dto/quack.response.dto';
+import { VoteDto } from '@/modules/quack/controllers/dto/vote.dto';
 import { PollsService } from '@/modules/quack/services/polls.service';
 import { User } from '@/shared/auth/decorators/user.decorator';
 import { Identity } from '@/shared/auth/domain/identity';
