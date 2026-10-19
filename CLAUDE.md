@@ -35,3 +35,7 @@ Don't reach for the browser to check your own work. Tests and type-checks are th
 ### Search is case-insensitive
 
 Search across quacks matches post text, author display name, and username — all case-insensitively. Keep any future search or filter extensions consistent with this.
+
+### Enforce single-action constraints in the database
+
+For user actions that permit at most one entry per item (such as one vote per poll or one like per post), always enforce uniqueness at the database level via composite unique indexes (e.g., `@@unique([userId, pollId])`), not just in application code. Pair these actions on the frontend with optimistic cache updates that roll back and notify the user on failure.
