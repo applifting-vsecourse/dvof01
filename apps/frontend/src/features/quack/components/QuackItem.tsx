@@ -2,11 +2,16 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { formatDate } from "@/lib/date"
 
 import type { Quack } from "@/features/quack/api/quackSchemas"
+import { DeleteQuackDialog } from "@/features/quack/components/DeleteQuackDialog"
 import { PollItem } from "@/features/quack/components/PollItem"
 import { UsersName } from "@/features/quack/components/UsersName"
 import { UsersUserName } from "@/features/quack/components/UsersUserName"
 
-type QuackItemProps = { quack: Quack }
+type QuackItemProps = {
+  quack: Quack
+  currentUserId?: string
+  onDelete?: (id: string) => Promise<void> | void
+}
 
 const MOOD_MAP: Record<string, { emoji: string; label: string }> = {
   happy: { emoji: "😊", label: "happy" },
@@ -15,8 +20,9 @@ const MOOD_MAP: Record<string, { emoji: string; label: string }> = {
   silly: { emoji: "🤪", label: "silly" },
 }
 
-export function QuackItem({ quack }: QuackItemProps) {
+export function QuackItem({ quack, currentUserId, onDelete }: QuackItemProps) {
   const { name, username } = quack.user
+  const isOwner = Boolean(currentUserId && currentUserId === quack.userId)
 
   const initials = name
     .split(" ")
@@ -34,19 +40,27 @@ export function QuackItem({ quack }: QuackItemProps) {
       </Avatar>
 
       <div className="flex flex-1 flex-col gap-1">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <span>
-            <UsersName name={name} /> <UsersUserName username={username} />
-          </span>
-          <span className="text-xs text-muted-foreground">·</span>
-          <time className="text-xs text-muted-foreground">{formatDate(quack.createdAt)}</time>
-          {moodInfo ? (
-            <>
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs text-muted-foreground">
-                {moodInfo.emoji} {moodInfo.label}
-              </span>
-            </>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span>
+              <UsersName name={name} /> <UsersUserName username={username} />
+            </span>
+            <span className="text-xs text-muted-foreground">·</span>
+            <time className="text-xs text-muted-foreground">{formatDate(quack.createdAt)}</time>
+            {moodInfo ? (
+              <>
+                <span className="text-xs text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">
+                  {moodInfo.emoji} {moodInfo.label}
+                </span>
+              </>
+            ) : null}
+          </div>
+          {isOwner ? (
+            <DeleteQuackDialog
+              quackId={quack.id}
+              onDelete={onDelete}
+            />
           ) : null}
         </div>
         <p className="text-sm break-words whitespace-pre-line">{quack.text}</p>

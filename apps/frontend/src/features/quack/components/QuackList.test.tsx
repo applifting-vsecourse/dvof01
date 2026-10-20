@@ -1,10 +1,19 @@
 // Example component test — the pattern to copy for your own components.
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { Quack } from "@/features/quack/api/quackSchemas"
 import { QuackList } from "@/features/quack/components/QuackList"
+
+const mockDeleteMutate = vi.fn()
+
+vi.mock("@/features/quack/hooks/useDeleteQuack", () => ({
+  useDeleteQuack: () => ({
+    mutate: mockDeleteMutate,
+    isPending: false,
+  }),
+}))
 
 const quack = (overrides: Partial<Quack> = {}): Quack => ({
   id: "q1",
@@ -16,6 +25,10 @@ const quack = (overrides: Partial<Quack> = {}): Quack => ({
 })
 
 describe("QuackList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it("renders quacks with author info", () => {
     render(<QuackList quacks={[quack()]} />)
 
@@ -62,5 +75,57 @@ describe("QuackList", () => {
     )
 
     expect(screen.getByText("No quacks found matching your search.")).toBeInTheDocument()
+  })
+
+  it("renders Delete action for author's quacks and asks for confirmation before deleting", async () => {
+    const user = userEvent.setup()
+    render(
+      <QuackList
+        quacks={[quack({ id: "q1", userId: "u1" })]}
+        currentUserId="u1"
+      />,
+    )
+
+    const deleteTrigger = screen.getByRole("button", { name: /delete/i })
+    expect(deleteTrigger).toBeInTheDocument()
+
+    await user.click(deleteTrigger)
+
+    // Confirmation dialog appears
+    expect(screen.getByText("Delete quack")).toBeInTheDocument()
+    expect(
+      screen.getByText("Are you sure you want to delete this quack? This action cannot be undone."),
+    ).toBeInTheDocument()
+
+    // Find confirm button inside dialog and click it
+    const dialog = screen.getByRole("dialog")
+    const confirmButton = within(dialog).getByRole("button", { name: "Delete" })
+    await user.click(confirmButton)
+
+    expect(mockDeleteMutate).toHaveBeenCalledWith("q1", expect.any(Object))
+  })
+
+  it("does not render Delete action for quacks by other users", () => {
+    render(
+      <QuackList
+        quacks={[quack({ id: "q1", userId: "u1" })]}
+        currentUserId="other-user"
+      />,
+    )
+
+    expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument()
+  })
+
+  it("renders emptyAction when provided", () => {
+    render(
+      <QuackList
+        quacks={[]}
+        emptyMessage="You don't have any quacks yet."
+        emptyAction={<button type="button">Write the first one</button>}
+      />,
+    )
+
+    expect(screen.getByText("You don't have any quacks yet.")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Write the first one" })).toBeInTheDocument()
   })
 })

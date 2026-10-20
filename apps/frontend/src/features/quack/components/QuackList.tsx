@@ -8,13 +8,25 @@ import { QuackItem } from "@/features/quack/components/QuackItem"
 
 type QuackListProps = {
   quacks: Quack[]
+  currentUserId?: string
   isLoading?: boolean
   error?: Error
   onReload?: () => void
-  emptyMessage?: string
+  emptyMessage?: React.ReactNode
+  emptyAction?: React.ReactNode
+  onDelete?: (id: string) => Promise<void> | void
 }
 
-export function QuackList({ quacks, isLoading, error, onReload, emptyMessage }: QuackListProps) {
+export function QuackList({
+  quacks,
+  currentUserId,
+  isLoading,
+  error,
+  onReload,
+  emptyMessage,
+  emptyAction,
+  onDelete,
+}: QuackListProps) {
   return (
     <div className="flex flex-col">
       {isLoading && quacks.length === 0 ? (
@@ -46,15 +58,20 @@ export function QuackList({ quacks, isLoading, error, onReload, emptyMessage }: 
       ) : null}
 
       {!isLoading && !error && quacks.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          {emptyMessage ?? "No quacks yet. Post the first one."}
-        </p>
+        <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            {emptyMessage ?? "No quacks yet. Post the first one."}
+          </p>
+          {emptyAction}
+        </div>
       ) : null}
 
       {quacks.map((quack) => (
         <QuackItem
           key={quack.id}
           quack={quack}
+          currentUserId={currentUserId}
+          onDelete={onDelete}
         />
       ))}
     </div>

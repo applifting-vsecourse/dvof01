@@ -1,14 +1,22 @@
 import { Quack } from '@/modules/quack/domain/quack';
 import { QuackRepository } from '@/modules/quack/repositories/quack.repository';
 import { Identity } from '@/shared/auth/domain/identity';
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class QuacksService {
   constructor(private readonly quackRepository: QuackRepository) {}
 
-  async getQuacks(q?: string, currentUserId?: string): Promise<Quack[]> {
-    return this.quackRepository.getQuacks(q, currentUserId);
+  async getQuacks(
+    q?: string,
+    currentUserId?: string,
+    mine?: boolean,
+  ): Promise<Quack[]> {
+    return this.quackRepository.getQuacks(q, currentUserId, mine);
   }
 
   async createQuack(
@@ -26,5 +34,16 @@ export class QuacksService {
       // the author is taken from the session, never from the request body
       userId: user.id,
     });
+  }
+
+  async deleteQuack(user: Identity, id: string): Promise<void> {
+    const quack = await this.quackRepository.getQuackById(id);
+    if (!quack) {
+      throw new NotFoundException('Quack not found');
+    }
+    if (quack.userId !== user.id) {
+      throw new ForbiddenException('You can only delete your own quacks');
+    }
+    await this.quackRepository.deleteQuack(id);
   }
 }

@@ -57,9 +57,13 @@ const mapPrismaQuackToDomain = (quack: PrismaQuackWithRelations): Quack => ({
 export class QuackRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getQuacks(q?: string, currentUserId?: string): Promise<Quack[]> {
+  async getQuacks(
+    q?: string,
+    currentUserId?: string,
+    mine?: boolean,
+  ): Promise<Quack[]> {
     const trimmedQuery = q?.trim();
-    const where = trimmedQuery
+    const searchFilter = trimmedQuery
       ? {
           OR: [
             { text: { contains: trimmedQuery, mode: 'insensitive' as const } },
@@ -80,8 +84,13 @@ export class QuackRepository {
         }
       : undefined;
 
+    const where = {
+      ...(searchFilter ? searchFilter : {}),
+      ...(mine && currentUserId ? { userId: currentUserId } : {}),
+    };
+
     const quacks = (await this.prisma.quack.findMany({
-      where,
+      where: Object.keys(where).length > 0 ? where : undefined,
       include: {
         user: true,
         poll: {
@@ -106,6 +115,27 @@ export class QuackRepository {
     })) as PrismaQuackWithRelations[];
 
     return quacks.map(mapPrismaQuackToDomain);
+  }
+
+  async getQuackById(id: string): Promise<Quack | null> {
+    const quack = (await this.prisma.quack.findUnique({
+      where: { id },
+      include: {
+        user: true,
+      },
+    })) as PrismaQuackWithRelations | null;
+
+    if (!quack) {
+      return null;
+    }
+
+    return mapPrismaQuackToDomain(quack);
+  }
+
+  async deleteQuack(id: string): Promise<void> {
+    await this.prisma.quack.delete({
+      where: { id },
+    });
   }
 
   async createQuack(createQuackData: {
