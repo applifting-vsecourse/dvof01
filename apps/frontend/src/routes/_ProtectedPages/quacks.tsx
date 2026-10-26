@@ -28,6 +28,7 @@ function QuacksPage() {
   const sessionQuery = useQuery(authSessionQueryOptions())
   const defaultMood = sessionQuery.data?.user.defaultMood ?? null
   const currentUserId = sessionQuery.data?.user.id
+  const isAdmin = sessionQuery.data?.user.role === "admin"
 
   const rawQuacks = quacksQuery.data ?? []
   const displayedQuacks =
@@ -92,6 +93,7 @@ function QuacksPage() {
         <QuackList
           quacks={displayedQuacks}
           currentUserId={currentUserId}
+          isAdmin={isAdmin}
           isLoading={quacksQuery.isLoading}
           error={quacksQuery.error ?? undefined}
           emptyMessage={emptyMessage}

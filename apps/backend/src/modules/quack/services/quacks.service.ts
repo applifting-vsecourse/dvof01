@@ -41,7 +41,9 @@ export class QuacksService {
     if (!quack) {
       throw new NotFoundException('Quack not found');
     }
-    if (quack.userId !== user.id) {
+    const isOwner = quack.userId === user.id;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) {
       throw new ForbiddenException('You can only delete your own quacks');
     }
     await this.quackRepository.deleteQuack(id);

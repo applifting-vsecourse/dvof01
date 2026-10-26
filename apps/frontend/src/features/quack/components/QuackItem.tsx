@@ -10,6 +10,7 @@ import { UsersUserName } from "@/features/quack/components/UsersUserName"
 type QuackItemProps = {
   quack: Quack
   currentUserId?: string
+  isAdmin?: boolean
   onDelete?: (id: string) => Promise<void> | void
 }
 
@@ -20,9 +21,10 @@ const MOOD_MAP: Record<string, { emoji: string; label: string }> = {
   silly: { emoji: "🤪", label: "silly" },
 }
 
-export function QuackItem({ quack, currentUserId, onDelete }: QuackItemProps) {
+export function QuackItem({ quack, currentUserId, isAdmin, onDelete }: QuackItemProps) {
   const { name, username } = quack.user
   const isOwner = Boolean(currentUserId && currentUserId === quack.userId)
+  const canDelete = isOwner || Boolean(isAdmin)
 
   const initials = name
     .split(" ")
@@ -56,7 +58,7 @@ export function QuackItem({ quack, currentUserId, onDelete }: QuackItemProps) {
               </>
             ) : null}
           </div>
-          {isOwner ? (
+          {canDelete ? (
             <DeleteQuackDialog
               quackId={quack.id}
               onDelete={onDelete}

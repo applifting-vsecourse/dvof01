@@ -105,15 +105,28 @@ describe("QuackList", () => {
     expect(mockDeleteMutate).toHaveBeenCalledWith("q1", expect.any(Object))
   })
 
-  it("does not render Delete action for quacks by other users", () => {
+  it("does not render Delete action for quacks by other users when not admin", () => {
     render(
       <QuackList
         quacks={[quack({ id: "q1", userId: "u1" })]}
         currentUserId="other-user"
+        isAdmin={false}
       />,
     )
 
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument()
+  })
+
+  it("renders Delete action for quacks by other users when user is admin", () => {
+    render(
+      <QuackList
+        quacks={[quack({ id: "q1", userId: "u1" })]}
+        currentUserId="other-user"
+        isAdmin={true}
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument()
   })
 
   it("renders emptyAction when provided", () => {

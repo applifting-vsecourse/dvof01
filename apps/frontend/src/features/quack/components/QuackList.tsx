@@ -9,6 +9,7 @@ import { QuackItem } from "@/features/quack/components/QuackItem"
 type QuackListProps = {
   quacks: Quack[]
   currentUserId?: string
+  isAdmin?: boolean
   isLoading?: boolean
   error?: Error
   onReload?: () => void
@@ -20,6 +21,7 @@ type QuackListProps = {
 export function QuackList({
   quacks,
   currentUserId,
+  isAdmin,
   isLoading,
   error,
   onReload,
@@ -71,6 +73,7 @@ export function QuackList({
           key={quack.id}
           quack={quack}
           currentUserId={currentUserId}
+          isAdmin={isAdmin}
           onDelete={onDelete}
         />
       ))}

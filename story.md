@@ -1,85 +1,78 @@
-# User Story: Polls in Quacks
+# Moderace: admin smaže jakýkoli quack
 
-## Story
+Status: **implementováno, bez otevřených rozhodnutí.** Navazuje na story „Delete + Mine“ (autor smaže svůj quack, záložky All / Mine).
 
-**As a** Quacker user,  
-**I want to** attach a poll with selectable answer options to my quack, and let others vote and see live counts,  
-**So that** we can quickly make group decisions (like where to go for lunch) without manually counting replies or getting lost in comment threads.
+## Zadání
 
----
+> Someone started posting nasty quacks. Their author won't delete them and right now we can't do anything about it. We need a moderator who can delete anything. Nothing more for now.
 
-## Acceptance Criteria
+## Příběh
 
-### AC1: Creating a Quack with a Poll
+**Jako** moderátor Quackeru (uživatel s rolí `admin`)
+**chci** smazat jakýkoli quack, i cizí,
+**abych** mohl odstranit nevhodný obsah, který jeho autor sám smazat nechce.
 
-- **Given** a logged-in user is composing a new quack,
-- **When** they choose to add a poll,
-- **Then** they can define between 2 and 10 answer options (each non-empty, trimmed text).
-- **And** the quack text itself serves as the question for the poll.
-- **And** a quack cannot be submitted with a poll having fewer than 2 non-empty options.
+Cíl je jediný: zlobivý quack jde odstranit. Nic navíc oproti tomuto dokumentu se nedělá („Nothing more for now“).
 
-### AC2: Displaying Polls in the Feed
+## Slovník
 
-- **Given** a quack contains a poll,
-- **When** it renders in the quack feed,
-- **Then** all answer options are displayed clearly alongside their respective vote counts and percentage of total votes.
-- **And** the total vote count for the poll is displayed.
-- **And** if the logged-in user has voted on this poll, their selected option is visibly highlighted.
+- **Moderátor**: uživatel s rolí `admin`. Role už existuje (enum `UserRole` v `schema.prisma`) a BetterAuth ji dává do session (`user.role`). Nová role se nezavádí.
+- **Autor**: uživatel, který quack napsal (`quack.userId`).
+- **Běžný uživatel**: kdokoli s rolí `user`, i když má v názvu „Admin“ (např. „Pond Admin“ ze seedu).
 
-### AC3: Casting a Vote
+## Akceptační kritéria
 
-- **Given** a logged-in user viewing a poll they have not yet voted on,
-- **When** they click on an answer option,
-- **Then** their vote is recorded for that option,
-- **And** the vote count for that option increases by 1,
-- **And** the percentages for all options recalculate,
-- **And** that option becomes highlighted as their selected choice.
+Texty v uvozovkách jsou texty rozhraní (aplikace je anglicky).
 
-### AC4: Changing a Vote
+**Mazání moderátorem**
 
-- **Given** a logged-in user has already voted for Option A,
-- **When** they click on Option B on the same poll,
-- **Then** their vote changes from Option A to Option B,
-- **And** the vote count for Option A decreases by 1,
-- **And** the vote count for Option B increases by 1,
-- **And** Option B is now highlighted as their selected choice.
+1. Admin vidí akci „Delete quack“ u **každého** quacku ve feedu, nejen u svých.
+2. Před smazáním se aplikace zeptá stejným potvrzovacím dialogem jako autora („Delete quack“, Cancel / Delete). Cancel nic nesmaže.
+3. Po potvrzení quack zmizí z feedu adminovi i všem ostatním, včetně autora. Spolu s ním zmizí jeho anketa, odpovědi a hlasy.
+4. Admin smaže cizí quack i přímým voláním API: `DELETE /api/quacks/:id` → `204`.
 
-### AC5: Retracting a Vote
+**Nic se nemění pro ostatní**
 
-- **Given** a logged-in user has already voted for Option A,
-- **When** they click on Option A again,
-- **Then** their vote is retracted (cleared),
-- **And** the vote count for Option A decreases by 1,
-- **And** no option is highlighted as selected for the user.
+5. Autor dál maže své quacky (`204`).
+6. Běžný uživatel cizí quack nesmaže ani přes API → `403`. Tlačítko u cizích quacků nevidí.
+7. Nepřihlášený → `401`.
+8. Role se bere jen ze session. Nic v požadavku (`?role=admin`, `userId`, tělo) ji nezmění. Jméno „Pond Admin“ adminem nedělá → `403`.
+9. Neexistující quack → `404`.
 
-### AC6: Database-Enforced Single Vote
+**Kde je kontrola**
 
-- **Given** concurrent vote submissions or race conditions from the same user on the same poll,
-- **When** the votes hit the database,
-- **Then** a database-level unique constraint (`userId` + `pollId`) guarantees that a user can never have more than one active vote per poll.
+10. Rozhodnutí „smí mazat“ je jedna podmínka v backend service, `QuacksService.deleteQuack`: `if (!isOwner && !isAdmin) throw new ForbiddenException()`. UI tlačítko jen skrývá a server kontroluje vždy.
 
-### AC7: Instantaneous Feel & Failure Handling
+## Upřesňující otázky
 
-- **Given** a user interacts with a poll option (voting, changing, or retracting),
-- **When** the click occurs,
-- **Then** the UI updates optimistically immediately.
-- **And** if the network request fails or the server rejects the vote:
-  - The UI rolls back to the previous vote state.
-  - An error toast alert is displayed informing the user that the vote could not be saved.
+Story se doptávala, dokud nezůstalo žádné otevřené rozhodnutí.
 
-### AC8: Author Participation
+1. **Kdo je moderátor? Zavádíme novou roli?**
+   Existující role `admin`. Žádná nová role, „Nothing more for now“.
+2. **Co přesně admin uvidí a jak bude mazat?**
+   Tlačítko Delete u každého quacku a stejný potvrzovací dialog jako autor. Žádný nový endpoint ani stránka.
+3. **Mazat natrvalo, nebo jen skrýt? Důvod, log, upozornění autora?**
+   Natrvalo, včetně ankety a hlasů. Žádný důvod, log ani upozornění, to bude případně později.
 
-- **Given** the author of a quack that contains a poll,
-- **When** viewing their own post,
-- **Then** they can vote, change, or retract their vote on the poll just like any other user.
+## Rozhodnutí
 
----
+| Rozhodnutí                                                                                  | Proč                                                                | Kdo      |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------- |
+| Moderátor = existující role `admin`, žádná nová role `moderator`                            | „Nothing more for now“; role i účet `admin@example.com` už existují | zadání   |
+| Stejný endpoint `DELETE /api/quacks/:id` a stejný potvrzovací dialog                        | je to tatáž akce, jen pro víc lidí                                  | uživatel |
+| Kontrola vlastník-nebo-admin v service: `if (!isOwner && !isAdmin)`, ne v guardu `@Roles`   | vlastnictví potřebuje data (autora quacku), ta má service           | zadání   |
+| Role ze session (`@User()` → `user.role`), nikdy z požadavku                                | role si nikdo nepřidělí sám (`input: false`)                        | zadání   |
+| Route předá `isAdmin={user?.role === "admin"}`, feed ukáže Delete při `isMine \|\| isAdmin` | features se navzájem neimportují                                    | zadání   |
+| Trvalé smazání včetně ankety a hlasů; bez soft delete, důvodu, logu a upozornění autora     | „Nothing more for now“                                              | uživatel |
+| Záložka Mine u admina ukazuje jen jeho vlastní quacky                                       | Mine znamená „moje“, ne „co smím mazat“                             | uživatel |
+| Mimo rozsah: role `moderator`, stránka Stats, blokování, nahlašování, e-maily               | nejsou v zadání                                                     | uživatel |
 
-## Out of Scope
+**Otevřená rozhodnutí: žádná.**
 
-- Editing poll questions or option texts after publication.
-- Closing or setting expiration timers/deadlines on polls.
-- Multiple-choice voting (selecting more than one option simultaneously).
-- Viewing the list/avatars of specific users who voted for an option.
-- Anonymous voting (all votes belong to authenticated accounts, even if voter identities aren't publicized in the MVP UI).
-- Standalone polls without a quack.
+## Ověření
+
+- **E2E** (`apps/frontend/e2e/moderation.spec.ts`): autor vytvoří quack, admin ho v UI smaže a quack zmizí i pro autora. Admin vidí Delete u každého quacku. „Pond Admin“ dostane `403`. Běžný uživatel dostane `403` (`quacks.spec.ts`: „nobody can delete someone else's quack“).
+- **Test selže, když se kontrola vypne** (ověřeno ručně):
+  - podmínka odstraněná úplně → testy běžného uživatele a „Pond Admina“ padají s `Expected: 403, Received: 204`;
+  - z podmínky vypadne `isAdmin` → test admina padá (quack po pokusu o smazání pořád existuje).
+- **Backend**: service (admin smaže cizí, ostatní dostanou `ForbiddenException`).

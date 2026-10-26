@@ -44,3 +44,7 @@ For user actions that permit at most one entry per item (such as one vote per po
 ### Who may do something is decided on the server
 
 "Me" comes from the session (`@User()`), never from a `userId` in the URL, query or body — and so does the role (`user.role`). An ownership check belongs in the service, which has the data; owner-or-role is one condition there — see `QuacksService.deleteQuack`. Hiding a button in React is a convenience, not a check. Signed out is 401 (the guard); signed in but not allowed is 403.
+
+### A permission check isn't done until its test has failed
+
+Every owner or role check gets a test that calls the API directly as someone who must not get through and expects 403 — an E2E spec in `apps/frontend/e2e/`, or an HTTP spec next to the controller. Before committing, switch the check off, run the test, watch it fail, and put the check back. In Playwright, assert that the confirmation dialog has closed before asserting the item is gone: an open Radix dialog hides the rest of the page from `getByRole`, so a refused delete would pass for a successful one.

@@ -113,18 +113,32 @@ describe('QuacksService', () => {
       expect(repository.deleteQuack).not.toHaveBeenCalled();
     });
 
-    it('throws ForbiddenException when user is not the author', async () => {
+    it('throws ForbiddenException when user is not the author and not admin', async () => {
       const quack = aQuack({ id: 'q1', userId: 'other-user' });
       const repository = mock<QuackRepository>();
       repository.getQuackById.mockResolvedValue(quack);
 
       const service = new QuacksService(repository);
-      const user = { id: 'u1' } as Identity;
+      const user = { id: 'u1', role: 'user' } as Identity;
 
       await expect(service.deleteQuack(user, 'q1')).rejects.toThrow(
         'You can only delete your own quacks',
       );
       expect(repository.deleteQuack).not.toHaveBeenCalled();
+    });
+
+    it('deletes quack when user is an admin even if not the author', async () => {
+      const quack = aQuack({ id: 'q1', userId: 'other-user' });
+      const repository = mock<QuackRepository>();
+      repository.getQuackById.mockResolvedValue(quack);
+      repository.deleteQuack.mockResolvedValue(undefined);
+
+      const service = new QuacksService(repository);
+      const user = { id: 'u1', role: 'admin' } as Identity;
+
+      await expect(service.deleteQuack(user, 'q1')).resolves.toBeUndefined();
+      expect(repository.getQuackById).toHaveBeenCalledWith('q1');
+      expect(repository.deleteQuack).toHaveBeenCalledWith('q1');
     });
   });
 });
