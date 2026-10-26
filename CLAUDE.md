@@ -14,6 +14,7 @@ The worked example is the quack feed: `Quack` model → seed → repository → 
 - `pnpm dev` — everything: env files, Postgres (Docker), migrate, seed, both dev servers
 - `pnpm check-all` — lint + type-check + tests + build (same as CI)
 - `pnpm backend test` / `pnpm frontend test:ci` — unit tests
+- `pnpm frontend e2e` — Playwright against the running app
 - `pnpm backend prisma:migrations:run` — create/apply migrations after schema changes
 
 ## Conventions
@@ -39,3 +40,7 @@ Search across quacks matches post text, author display name, and username — al
 ### Enforce single-action constraints in the database
 
 For user actions that permit at most one entry per item (such as one vote per poll or one like per post), always enforce uniqueness at the database level via composite unique indexes (e.g., `@@unique([userId, pollId])`), not just in application code. Pair these actions on the frontend with optimistic cache updates that roll back and notify the user on failure.
+
+### Who may do something is decided on the server
+
+"Me" comes from the session (`@User()`), never from a `userId` in the URL, query or body — and so does the role (`user.role`). An ownership check belongs in the service, which has the data; owner-or-role is one condition there — see `QuacksService.deleteQuack`. Hiding a button in React is a convenience, not a check. Signed out is 401 (the guard); signed in but not allowed is 403.
