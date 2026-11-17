@@ -69,6 +69,7 @@ export class QuacksController {
       text: body.text,
       mood: body.mood,
       poll: body.poll,
+      replyToId: body.replyToId,
     });
     return QuackResponseDto.fromDomain(quack);
   }

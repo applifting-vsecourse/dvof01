@@ -1,5 +1,6 @@
 import { PrismaService } from '@/core/prisma/prisma.service';
 import { User } from '@/generated/prisma/client';
+import { Quack } from '@/modules/quack/domain/quack';
 import { BetterAuth } from '@/shared/auth/providers/better-auth.provider';
 import { Config } from '@/shared/config/config.service';
 import { createQuack } from './create-quack';
@@ -164,11 +165,31 @@ Please stop tagging me.`,
 
   const now = Date.now();
 
+  const createdQuacks: Quack[] = [];
   for (const { author, minutesAgo, text } of exampleQuacks) {
-    await createQuack(prisma, {
+    const q = await createQuack(prisma, {
       text,
       userId: author.id,
       createdAt: new Date(now - minutesAgo * MINUTE_IN_MS),
+    });
+    createdQuacks.push(q);
+  }
+
+  // Seed replies for the latest quack so the feed in production shows at least one quack with replies
+  const lastQuack = createdQuacks[createdQuacks.length - 1];
+  if (lastQuack) {
+    const reply1 = await createQuack(prisma, {
+      text: 'Did the swan accept the terms? Or was it just aggressive flapping?',
+      userId: breadCritic.id,
+      replyToId: lastQuack.id,
+      createdAt: new Date(now - 15 * MINUTE_IN_MS),
+    });
+
+    await createQuack(prisma, {
+      text: 'Tagging @PondAdmin again just to be sure.',
+      userId: caffeinatedDuck.id,
+      replyToId: reply1.id,
+      createdAt: new Date(now - 10 * MINUTE_IN_MS),
     });
   }
 };

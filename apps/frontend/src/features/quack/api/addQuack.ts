@@ -5,6 +5,7 @@ import { quackSchema, type Quack } from "@/features/quack/api/quackSchemas"
 export async function addQuack(input: {
   text: string
   mood?: string | null
+  replyToId?: string | null
   poll?: { options: string[] } | null
 }): Promise<Quack> {
   const json = await api.post("quacks", { json: input }).json()

@@ -72,6 +72,15 @@ export class QuackResponseDto {
   @ApiPropertyOptional({ type: PollResponseDto, nullable: true })
   poll?: PollResponseDto | null;
 
+  @ApiPropertyOptional({ nullable: true })
+  replyToId?: string | null;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  deletedAt?: Date | null;
+
+  @ApiPropertyOptional({ type: [QuackResponseDto] })
+  replies?: QuackResponseDto[];
+
   static fromDomain(quack: Quack): QuackResponseDto {
     if (!quack.user) {
       throw new Error(
@@ -83,6 +92,9 @@ export class QuackResponseDto {
       text: quack.text,
       mood: quack.mood ?? null,
       userId: quack.userId,
+      replyToId: quack.replyToId ?? null,
+      deletedAt: quack.deletedAt ?? null,
+      replies: (quack.replies ?? []).map(QuackResponseDto.fromDomain),
       createdAt: quack.createdAt,
       user: {
         id: quack.user.id,
