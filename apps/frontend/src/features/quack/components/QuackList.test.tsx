@@ -7,10 +7,18 @@ import type { Quack } from "@/features/quack/api/quackSchemas"
 import { QuackList } from "@/features/quack/components/QuackList"
 
 const mockDeleteMutate = vi.fn()
+const mockAddMutateAsync = vi.fn()
 
 vi.mock("@/features/quack/hooks/useDeleteQuack", () => ({
   useDeleteQuack: () => ({
     mutate: mockDeleteMutate,
+    isPending: false,
+  }),
+}))
+
+vi.mock("@/features/quack/hooks/useAddQuack", () => ({
+  useAddQuack: () => ({
+    mutateAsync: mockAddMutateAsync,
     isPending: false,
   }),
 }))
@@ -140,5 +148,75 @@ describe("QuackList", () => {
 
     expect(screen.getByText("You don't have any quacks yet.")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Write the first one" })).toBeInTheDocument()
+  })
+
+  it("renders replies under a quack", () => {
+    const parentWithReply = quack({
+      id: "q-parent",
+      text: "parent quack",
+      replies: [
+        quack({
+          id: "q-child",
+          text: "child reply",
+          userId: "u2",
+          user: { id: "u2", name: "Bread Critic", username: "BreadCritic" },
+        }),
+      ],
+    })
+
+    render(<QuackList quacks={[parentWithReply]} />)
+
+    expect(screen.getByText("parent quack")).toBeInTheDocument()
+    expect(screen.getByText("child reply")).toBeInTheDocument()
+    expect(screen.getByText("Bread Critic")).toBeInTheDocument()
+    expect(screen.getByText("@BreadCritic")).toBeInTheDocument()
+  })
+
+  it("renders a tombstone when quack is deleted but has replies", () => {
+    const deletedWithReply = quack({
+      id: "q-deleted",
+      text: "",
+      deletedAt: new Date("2026-01-02T12:00:00Z"),
+      replies: [
+        quack({
+          id: "q-reply",
+          text: "reply under deleted quack",
+          userId: "u2",
+          user: { id: "u2", name: "Bread Critic", username: "BreadCritic" },
+        }),
+      ],
+    })
+
+    render(<QuackList quacks={[deletedWithReply]} />)
+
+    expect(screen.getByText("[This quack has been deleted]")).toBeInTheDocument()
+    expect(screen.getByText("[deleted]")).toBeInTheDocument()
+    expect(screen.getByText("reply under deleted quack")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument()
+  })
+
+  it("allows user to reply to a quack", async () => {
+    const user = userEvent.setup()
+    render(
+      <QuackList
+        quacks={[quack({ id: "q1", text: "original post" })]}
+        currentUserId="u2"
+      />,
+    )
+
+    const replyButton = screen.getByRole("button", { name: /reply/i })
+    await user.click(replyButton)
+
+    const input = screen.getByLabelText(/reply to @caffeinatedduck/i)
+    expect(input).toBeInTheDocument()
+
+    await user.type(input, "my test reply")
+    const submitButton = screen.getByRole("button", { name: "Reply" })
+    await user.click(submitButton)
+
+    expect(mockAddMutateAsync).toHaveBeenCalledWith({
+      text: "my test reply",
+      replyToId: "q1",
+    })
   })
 })

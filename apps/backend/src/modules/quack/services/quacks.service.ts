@@ -24,13 +24,24 @@ export class QuacksService {
     quackData: {
       text: string;
       mood?: string | null;
+      replyToId?: string | null;
       poll?: { options: string[] } | null;
     },
   ): Promise<Quack> {
+    if (quackData.replyToId) {
+      const parent = await this.quackRepository.getQuackById(
+        quackData.replyToId,
+      );
+      if (!parent) {
+        throw new NotFoundException('Quack to reply to not found');
+      }
+    }
+
     return this.quackRepository.createQuack({
       text: quackData.text,
       mood: quackData.mood ?? null,
       poll: quackData.poll ?? null,
+      replyToId: quackData.replyToId ?? null,
       // the author is taken from the session, never from the request body
       userId: user.id,
     });

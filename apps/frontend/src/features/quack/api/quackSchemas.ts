@@ -21,18 +21,35 @@ export const pollSchema = z.object({
   userVotedOptionId: z.string().nullable().optional(),
 })
 
-export const quackSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-  mood: z.string().nullable().optional(),
-  userId: z.string(),
-  createdAt: z.coerce.date(),
-  user: quackUserSchema,
-  poll: pollSchema.nullable().optional(),
-})
-
-export const quacksSchema = z.array(quackSchema)
-
 export type PollOption = z.infer<typeof pollOptionSchema>
 export type Poll = z.infer<typeof pollSchema>
-export type Quack = z.infer<typeof quackSchema>
+
+export type Quack = {
+  id: string
+  text: string
+  mood?: string | null
+  userId: string
+  replyToId?: string | null
+  deletedAt?: Date | null
+  createdAt: Date
+  user: z.infer<typeof quackUserSchema>
+  poll?: Poll | null
+  replies?: Quack[]
+}
+
+export const quackSchema: z.ZodType<Quack> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    text: z.string(),
+    mood: z.string().nullable().optional(),
+    userId: z.string(),
+    replyToId: z.string().nullable().optional(),
+    deletedAt: z.coerce.date().nullable().optional(),
+    createdAt: z.coerce.date(),
+    user: quackUserSchema,
+    poll: pollSchema.nullable().optional(),
+    replies: z.array(quackSchema).optional(),
+  }),
+)
+
+export const quacksSchema = z.array(quackSchema)

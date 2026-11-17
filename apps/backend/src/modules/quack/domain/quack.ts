@@ -26,6 +26,9 @@ export type Quack = {
   text: string;
   mood?: string | null;
   userId: string;
+  replyToId?: string | null;
+  deletedAt?: Date | null;
+  replies?: Quack[];
   createdAt: Date;
   updatedAt: Date;
   user?: QuackAuthor;

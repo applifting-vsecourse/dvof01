@@ -60,4 +60,12 @@ export class CreateQuackDto {
   @ValidateNested()
   @Type(() => CreatePollDto)
   poll?: CreatePollDto | null;
+
+  @ApiPropertyOptional({
+    description: 'Optional ID of the quack being replied to',
+    example: 'clxyz123...',
+  })
+  @IsOptional()
+  @IsString()
+  replyToId?: string | null;
 }
