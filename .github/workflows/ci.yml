@@ -50,3 +50,127 @@ jobs:
 
       - name: Build frontend
         run: pnpm frontend build
+
+  # API tests: real HTTP requests to the backend against a real Postgres.
+  test-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: quacker
+          POSTGRES_PASSWORD: quacker
+          POSTGRES_DB: quacker
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U quacker -d quacker"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://quacker:quacker@localhost:5433/quacker_test
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create env files
+        run: pnpm env:check
+
+      - name: Generate Prisma client
+        run: pnpm backend prisma:generate
+
+      - name: Integration tests
+        run: pnpm backend test:int
+
+  # Playwright: CI starts its own database, backend and frontend.
+  test-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: quacker
+          POSTGRES_PASSWORD: quacker
+          POSTGRES_DB: quacker
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U quacker -d quacker"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm --filter frontend exec playwright install --with-deps chromium
+
+      - name: Create env files
+        run: pnpm env:check
+
+      - name: Migrate and seed the database
+        run: |
+          pnpm backend prisma:generate
+          pnpm backend migrate
+          pnpm backend seed
+
+      - name: Start backend and frontend
+        run: |
+          nohup pnpm backend start > backend.log 2>&1 &
+          nohup pnpm frontend dev > frontend.log 2>&1 &
+          for url in http://localhost:4050/api/docs http://localhost:3050; do
+            for i in $(seq 1 90); do
+              curl -sf -o /dev/null "$url" && break
+              sleep 2
+            done
+            curl -sf -o /dev/null "$url" || { echo "$url did not come up"; cat backend.log frontend.log; exit 1; }
+          done
+
+      - name: End-to-end tests
+        run: pnpm frontend e2e
+
+      - name: Server logs
+        if: failure()
+        run: cat backend.log frontend.log
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/frontend/playwright-report
+          retention-days: 7
+
+  # Tests are the spec: flag PRs that remove or rewrite lines in existing tests.
+  # Independent of the other jobs and NOT a required check — it shows red on
+  # the PR without blocking the merge or the deploy.
+  test-changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check that existing tests were not changed
+        run: scripts/check-test-changes.sh "origin/${{ github.base_ref }}"
