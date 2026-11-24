@@ -35,6 +35,14 @@ export type Quack = {
   user: z.infer<typeof quackUserSchema>
   poll?: Poll | null
   replies?: Quack[]
+  likeCount?: number
+  likedByMe?: boolean
+}
+
+export type LikeSummary = {
+  quackId: string
+  likeCount: number
+  likedByMe: boolean
 }
 
 export const quackSchema: z.ZodType<Quack> = z.lazy(() =>
