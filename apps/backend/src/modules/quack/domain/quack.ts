@@ -33,4 +33,8 @@ export type Quack = {
   updatedAt: Date;
   user?: QuackAuthor;
   poll?: Poll | null;
+  /** Number of likes; computed on read (ADR 0002). */
+  likeCount?: number;
+  /** Whether the requesting user likes this quack. */
+  likedByMe?: boolean;
 };

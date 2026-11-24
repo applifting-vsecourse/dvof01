@@ -57,6 +57,8 @@ export const quackSchema: z.ZodType<Quack> = z.lazy(() =>
     user: quackUserSchema,
     poll: pollSchema.nullable().optional(),
     replies: z.array(quackSchema).optional(),
+    likeCount: z.number().optional(),
+    likedByMe: z.boolean().optional(),
   }),
 )
 
