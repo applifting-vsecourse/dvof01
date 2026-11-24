@@ -17,7 +17,7 @@ describe('GET /api/quacks', () => {
     await t.close();
   });
 
-  it('returns 401 to a signed-out visitor', async () => {
+  it('rejects a signed-out visitor with 401', async () => {
     await t.anonymous().get('/api/quacks').expect(401);
   });
 
