@@ -20,7 +20,22 @@ type PrismaQuackWithRelations = PrismaQuack & {
       })
     | null;
   replies?: PrismaQuackWithRelations[];
+  likes?: { id: string }[];
+  _count?: { likes?: number };
 };
+
+// Like count and the viewer's own like (ADR 0002), for quacks and replies.
+const likesInclude = (
+  currentUserId?: string,
+): {
+  _count: { select: { likes: true } };
+  likes: { where: { userId: string }; select: { id: true } } | false;
+} => ({
+  _count: { select: { likes: true } },
+  likes: currentUserId
+    ? { where: { userId: currentUserId }, select: { id: true } }
+    : false,
+});
 
 const mapPrismaQuackToDomain = (quack: PrismaQuackWithRelations): Quack => ({
   id: quack.id,
@@ -54,6 +69,8 @@ const mapPrismaQuackToDomain = (quack: PrismaQuackWithRelations): Quack => ({
         })),
       }
     : null,
+  likeCount: quack._count?.likes ?? 0,
+  likedByMe: (quack.likes?.length ?? 0) > 0,
   replies: quack.replies
     ? quack.replies.map(mapPrismaQuackToDomain)
     : undefined,
@@ -70,6 +87,7 @@ export class QuackRepository {
     return {
       include: {
         user: true,
+        ...likesInclude(currentUserId),
         poll: {
           include: {
             options: {
@@ -88,6 +106,7 @@ export class QuackRepository {
         replies: {
           include: {
             user: true,
+            ...likesInclude(currentUserId),
             poll: {
               include: {
                 options: {
@@ -160,6 +179,7 @@ export class QuackRepository {
       where: Object.keys(where).length > 0 ? where : undefined,
       include: {
         user: true,
+        ...likesInclude(currentUserId),
         poll: {
           include: {
             options: {
@@ -217,6 +237,8 @@ export class QuackRepository {
       // Tombstone: has replies, scrub content and set deletedAt
       await this.prisma.$transaction([
         this.prisma.poll.deleteMany({ where: { quackId: id } }),
+        // Likes belong to the content, which really disappears (ADR 0002)
+        this.prisma.like.deleteMany({ where: { quackId: id } }),
         this.prisma.quack.update({
           where: { id },
           data: {
@@ -284,6 +306,7 @@ export class QuackRepository {
       },
       include: {
         user: true,
+        ...likesInclude(createQuackData.userId),
         poll: {
           include: {
             options: {

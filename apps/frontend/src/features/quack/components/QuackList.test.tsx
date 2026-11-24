@@ -23,6 +23,10 @@ vi.mock("@/features/quack/hooks/useAddQuack", () => ({
   }),
 }))
 
+vi.mock("@/features/quack/hooks/useToggleLike", () => ({
+  useToggleLike: () => ({ mutate: vi.fn(), isPending: false }),
+}))
+
 const quack = (overrides: Partial<Quack> = {}): Quack => ({
   id: "q1",
   text: "quack quack",

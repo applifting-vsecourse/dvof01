@@ -32,6 +32,7 @@ model Quack {
   replyToId String?
   replyTo   Quack?    @relation("QuackReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Quack[]   @relation("QuackReplies")
+  likes     Like[]
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
@@ -101,6 +102,7 @@ model User {
   accounts        Account[]
   quacks          Quack[]
   pollVotes       PollVote[]
+  likes           Like[]
   role            UserRole  @default(user)
 
   username        String? @db.VarChar(50)
@@ -155,4 +157,17 @@ model PollVote {
   @@index([optionId])
   @@index([userId])
   @@map("poll_vote")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  quackId   String
+  userId    String
+  quack     Quack    @relation(fields: [quackId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, quackId])
+  @@index([quackId])
+  @@map("like")
 }

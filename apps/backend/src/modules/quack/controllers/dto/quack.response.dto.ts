@@ -78,6 +78,12 @@ export class QuackResponseDto {
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
   deletedAt?: Date | null;
 
+  @ApiProperty()
+  likeCount!: number;
+
+  @ApiProperty({ description: 'Whether the requesting user likes it' })
+  likedByMe!: boolean;
+
   @ApiPropertyOptional({ type: [QuackResponseDto] })
   replies?: QuackResponseDto[];
 
@@ -102,6 +108,8 @@ export class QuackResponseDto {
         username: quack.user.username,
       },
       poll: quack.poll ? PollResponseDto.fromDomain(quack.poll) : null,
+      likeCount: quack.likeCount ?? 0,
+      likedByMe: quack.likedByMe ?? false,
     };
   }
 }

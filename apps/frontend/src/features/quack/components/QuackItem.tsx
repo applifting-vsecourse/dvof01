@@ -8,10 +8,12 @@ import { formatDate } from "@/lib/date"
 
 import type { Quack } from "@/features/quack/api/quackSchemas"
 import { DeleteQuackDialog } from "@/features/quack/components/DeleteQuackDialog"
+import { LikeButton } from "@/features/quack/components/LikeButton"
 import { PollItem } from "@/features/quack/components/PollItem"
 import { UsersName } from "@/features/quack/components/UsersName"
 import { UsersUserName } from "@/features/quack/components/UsersUserName"
 import { useAddQuack } from "@/features/quack/hooks/useAddQuack"
+import { useToggleLike } from "@/features/quack/hooks/useToggleLike"
 
 type QuackItemProps = {
   quack: Quack
@@ -33,6 +35,7 @@ export function QuackItem({ quack, currentUserId, isAdmin, onDelete, depth = 0 }
   const [replyText, setReplyText] = useState("")
   const [replyError, setReplyError] = useState<string | null>(null)
   const addQuackMutation = useAddQuack()
+  const toggleLike = useToggleLike()
 
   if (quack.deletedAt) {
     return (
@@ -143,6 +146,11 @@ export function QuackItem({ quack, currentUserId, isAdmin, onDelete, depth = 0 }
         {quack.poll ? <PollItem poll={quack.poll} /> : null}
 
         <div className="mt-1 flex items-center gap-4">
+          <LikeButton
+            likeCount={quack.likeCount ?? 0}
+            likedByMe={quack.likedByMe ?? false}
+            onToggle={(isLiked) => toggleLike.mutate({ quackId: quack.id, liked: isLiked })}
+          />
           {currentUserId ? (
             <Button
               variant="ghost"
